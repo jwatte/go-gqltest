@@ -12,6 +12,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
+	"github.com/jwatte/go-gqltest/foo"
 	"github.com/jwatte/go-gqltest/graph/model"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
@@ -54,6 +55,7 @@ type ComplexityRoot struct {
 	Todo struct {
 		Done func(childComplexity int) int
 		ID   func(childComplexity int) int
+		Mode func(childComplexity int) int
 		Text func(childComplexity int) int
 		User func(childComplexity int) int
 	}
@@ -118,6 +120,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Todo.ID(childComplexity), true
+
+	case "Todo.mode":
+		if e.complexity.Todo.Mode == nil {
+			break
+		}
+
+		return e.complexity.Todo.Mode(childComplexity), true
 
 	case "Todo.text":
 		if e.complexity.Todo.Text == nil {
@@ -220,6 +229,12 @@ type Todo {
   text: String!
   done: Boolean!
   user: User!
+  mode: Mode!
+}
+
+enum Mode {
+  One
+  Two
 }
 
 type User {
@@ -234,11 +249,13 @@ type Query {
 input NewTodo {
   text: String!
   userId: String!
+  mode: Mode
 }
 
 type Mutation {
   createTodo(input: NewTodo!): Todo!
-}`, BuiltIn: false},
+}
+`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
@@ -592,6 +609,40 @@ func (ec *executionContext) _Todo_user(ctx context.Context, field graphql.Collec
 	res := resTmp.(*model.User)
 	fc.Result = res
 	return ec.marshalNUser2ᚖgithubᚗcomᚋjwatteᚋgoᚑgqltestᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Todo_mode(ctx context.Context, field graphql.CollectedField, obj *model.Todo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Todo",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Mode, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(foo.Mode)
+	fc.Result = res
+	return ec.marshalNMode2githubᚗcomᚋjwatteᚋgoᚑgqltestᚋfooᚐMode(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
@@ -1739,6 +1790,14 @@ func (ec *executionContext) unmarshalInputNewTodo(ctx context.Context, obj inter
 			if err != nil {
 				return it, err
 			}
+		case "mode":
+			var err error
+
+			ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("mode"))
+			it.Mode, err = ec.unmarshalOMode2ᚖgithubᚗcomᚋjwatteᚋgoᚑgqltestᚋfooᚐMode(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -1856,6 +1915,11 @@ func (ec *executionContext) _Todo(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "user":
 			out.Values[i] = ec._Todo_user(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "mode":
+			out.Values[i] = ec._Todo_mode(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -2175,6 +2239,15 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNMode2githubᚗcomᚋjwatteᚋgoᚑgqltestᚋfooᚐMode(ctx context.Context, v interface{}) (foo.Mode, error) {
+	res, err := ec.unmarshalInputMode(ctx, v)
+	return res, graphql.WrapErrorWithInputPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNMode2githubᚗcomᚋjwatteᚋgoᚑgqltestᚋfooᚐMode(ctx context.Context, sel ast.SelectionSet, v foo.Mode) graphql.Marshaler {
+	return ec._Mode(ctx, sel, &v)
 }
 
 func (ec *executionContext) unmarshalNNewTodo2githubᚗcomᚋjwatteᚋgoᚑgqltestᚋgraphᚋmodelᚐNewTodo(ctx context.Context, v interface{}) (model.NewTodo, error) {
@@ -2509,6 +2582,21 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 		return graphql.Null
 	}
 	return graphql.MarshalBoolean(*v)
+}
+
+func (ec *executionContext) unmarshalOMode2ᚖgithubᚗcomᚋjwatteᚋgoᚑgqltestᚋfooᚐMode(ctx context.Context, v interface{}) (*foo.Mode, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputMode(ctx, v)
+	return &res, graphql.WrapErrorWithInputPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOMode2ᚖgithubᚗcomᚋjwatteᚋgoᚑgqltestᚋfooᚐMode(ctx context.Context, sel ast.SelectionSet, v *foo.Mode) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Mode(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

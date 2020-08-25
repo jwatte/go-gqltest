@@ -7,6 +7,12 @@ type Todo {
   text: String!
   done: Boolean!
   user: User!
+  mode: Mode!
+}
+
+enum Mode {
+  One
+  Two
 }
 
 type User {
@@ -21,6 +27,7 @@ type Query {
 input NewTodo {
   text: String!
   userId: String!
+  mode: Mode
 }
 
 type Mutation {
